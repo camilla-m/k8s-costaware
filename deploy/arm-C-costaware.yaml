@@ -1,0 +1,44 @@
+# ARM C -- PROPOSTA: Phi_i = alpha_i + I(frio)*delta_i, com termo de packing.
+# transitionRatio (R) reproduz o parametro de sensibilidade do artigo:
+#   R = 0    -> puro preco, sem inercia temporal (ablacao)
+#   R = 1    -> neutro
+#   R = 10   -> moderado
+#   R = 100  -> critico (cold start de imagem de modelo de IA)
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+clientConnection:
+  kubeconfig: /etc/kubernetes/scheduler.conf
+profiles:
+  - schedulerName: default-scheduler
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: MostAllocated
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1
+      - name: CostAware
+        args:
+          transitionRatio: 10.0
+          packingWeight: 0.2
+          coldNodeAgeSeconds: 300
+          defaultPrice:
+            hourlyUSD: 0.10
+            bootSeconds: 180
+    plugins:
+      # PreScore e um extension point SEPARADO: sem habilitar CostAware
+      # aqui, o plugin so aloca o estado do ciclo pelo caminho lento.
+      preScore:
+        enabled:
+          - name: CostAware
+      score:
+        enabled:
+          - name: CostAware
+            weight: 10
+          - name: NodeResourcesFit
+            weight: 3
+        disabled:
+          - name: NodeResourcesBalancedAllocation

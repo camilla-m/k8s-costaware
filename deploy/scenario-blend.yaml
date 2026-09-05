@@ -1,0 +1,41 @@
+# CENARIO -- R=10 com a mistura de producao (packing + NodeResourcesFit)
+#
+# schedulerName dedicado: o kube-scheduler do cluster ignora estes pods,
+# entao o cenario roda em paralelo sem parar nada.
+#
+# coldNodeAgeSeconds: 0 e OBRIGATORIO aqui. Nos KWOK acabam de ser criados;
+# com a janela de boot padrao (300s) TODOS seriam considerados frios e o
+# cenario nao discriminaria nada.
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: false
+profiles:
+  - schedulerName: costaware-scenario
+    pluginConfig:
+      - name: CostAware
+        args:
+          transitionRatio: 10.0
+          packingWeight: 0.2
+          coldNodeAgeSeconds: 0
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: MostAllocated
+            resources:
+              - name: cpu
+                weight: 1
+    plugins:
+      # PreScore e um extension point SEPARADO: sem habilitar CostAware
+      # aqui, o plugin so aloca o estado do ciclo pelo caminho lento.
+      preScore:
+        enabled:
+          - name: CostAware
+      score:
+        enabled:
+          - name: CostAware
+            weight: 10
+          - name: NodeResourcesFit
+            weight: 3
+        disabled:
+          - name: "*"

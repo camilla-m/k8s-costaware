@@ -1,0 +1,26 @@
+# ARM B -- BASELINE FORTE: bin-packing nativo do Kubernetes.
+# MostAllocated consolida, mas e CEGO A PRECO: empacota por razao de
+# recurso, nao por $/recurso. E contra este arm que a tese precisa ganhar.
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+clientConnection:
+  kubeconfig: /etc/kubernetes/scheduler.conf
+profiles:
+  - schedulerName: default-scheduler
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: MostAllocated
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1
+    plugins:
+      score:
+        enabled:
+          - name: NodeResourcesFit
+            weight: 5
+        disabled:
+          - name: NodeResourcesBalancedAllocation
