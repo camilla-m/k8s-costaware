@@ -24,6 +24,7 @@ help:
 	@echo "  make scenario   roda o teste de cenario deterministico"
 	@echo "  make bench-nodes  aplica 200 nos falsos para o benchmark"
 	@echo "  make bench-local  roda os 3 bracos x REPEATS seeds e agrega (KWOK, local)"
+	@echo "  make bench-sweep  varredura de R (0,1,10,100) x REPEATS seeds, C vs B (KWOK, local)"
 	@echo "  make clean      destroi o cluster"
 
 .PHONY: deps
@@ -77,6 +78,14 @@ ARMS    ?= A,B,C
 .PHONY: bench-local
 bench-local: build
 	$(PYTHON) bench/run_local.py --repeats $(REPEATS) --arms $(ARMS) \
+		--scheduler-bin ./bin/costaware-scheduler --kubeconfig $(KUBECONFIG)
+
+# Varredura de sensibilidade R -- ablacao que isola "preco" (R=0) de "inercia"
+# (R alto). C-R<r> vs B, com Wilcoxon (exato via scipy se instalado).
+R_VALUES ?= 0,1,10,100
+.PHONY: bench-sweep
+bench-sweep: build
+	$(PYTHON) bench/run_local.py --repeats $(REPEATS) --arms A,B,C --r-values $(R_VALUES) \
 		--scheduler-bin ./bin/costaware-scheduler --kubeconfig $(KUBECONFIG)
 
 .PHONY: clean
