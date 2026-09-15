@@ -254,7 +254,11 @@ de ser um numero inventado.
    credito (academico ou nao). Reporte isso como pendencia, nao esconda.
 4. *E se `Phi` empatar com `MostAllocated`?* — E um resultado valido e previsto:
    significa que a heterogeneidade de preco na instancia nao ativa a Condicao 2 do
-   Teorema 2. Reporte, nao esconda.
+   Teorema 2. Reporte, nao esconda. **Isto ja aconteceu, de um jeito mais sutil**:
+   `docs/sensitivity-sweep.md` mostra que a economia de C sobre B nao muda entre
+   R=0 e R=100 — o ganho medido vem do termo de preco, nao da inercia temporal.
+   Nao esconda isso tambem; investigue as hipoteses la antes de alegar o
+   diferencial temporal na qualificacao.
 5. *Cadê a migracao?* — Fora do escopo do MVP, e o Componente 2; explique o
    descheduler e os PDBs.
 

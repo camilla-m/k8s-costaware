@@ -49,23 +49,22 @@ heterogeneidade preco x delta e ganha, de forma estatisticamente estavel.*
 E a pergunta certa para a qualificacao — a Secao 4 do README explica por que A
 nao e o baseline relevante.
 
-NAO responde "quanto se economiza na producao". Para isso faltam, em ordem de
-prioridade:
+NAO responde "quanto se economiza na producao". Faltam:
 
-1. **Precos reais.** `pkg/costaware/pricing.go` e `bench/gen_nodes.py` usam uma
-   tabela chutada. Puxar da AWS Price List API (regiao + data registradas) —
-   Semana 3 do plano no README.
+1. ~~Precos reais.~~ **Feito** — `docs/pricing.md` (AWS Price List Bulk API,
+   sem credenciais, `p4d.24xlarge` corrigido de 32.77 para 21.96 USD/h).
 2. **delta medido**, nao `boot_seconds x ratio=10` inventado. Ver
-   `docs/measuring-delta.md`.
+   `docs/measuring-delta.md`. Ainda pendente — exige cluster real.
 3. **Karpenter como 4o braco**, num cluster real (nao KWOK) — consolidacao
-   ligada, mesma carga.
-4. **n maior e Wilcoxon exato.** n=8 e a aproximacao normal bastam para um
-   primeiro sinal, nao para a tese. `scipy.stats.wilcoxon(exact=True)`, n>=10,
-   e reportar tambem effect size.
-5. Esta rodada usa `boot_seconds x 10` (o `--ratio` do gerador) SOBRE um
-   `transitionRatio=10` no plugin — dois fatores de 10 empilhados. Vale rodar
-   a varredura de sensibilidade R in {0,1,10,100} do plano de 8 semanas para
-   separar os dois efeitos em vez de compor-los por acidente.
+   ligada, mesma carga. Ainda pendente — exige cluster real.
+4. ~~n maior e Wilcoxon exato.~~ **Feito** — `docs/sensitivity-sweep.md`,
+   n=8, `scipy.stats.wilcoxon` exato.
+5. ~~Varredura de sensibilidade R.~~ **Feito, e o resultado e desconfortavel**:
+   a economia contra B NAO varia entre R=0 e R=100 (64.7%-65.8%). O ganho
+   medido vem quase todo do termo de preco, nao da inercia temporal que e o
+   diferencial alegado da tese. Ver `docs/sensitivity-sweep.md` para as
+   hipoteses e o proximo teste (horizonte maior, de graca, sem nuvem) antes
+   de levar isso — em qualquer direcao — para o texto da qualificacao.
 
 ## Onde estao os dados brutos
 
