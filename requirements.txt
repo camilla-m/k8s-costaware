@@ -1,2 +1,3 @@
 kubernetes>=29.0.0
 PyYAML>=6.0
+ijson>=3.2   # bench/fetch_aws_prices.py: streaming parse do bulk price list (~450MB)

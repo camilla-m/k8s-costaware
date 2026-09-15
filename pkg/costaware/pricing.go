@@ -77,13 +77,22 @@ func parseFloat(s string) (float64, error) {
 	return strconv.ParseFloat(s, 64)
 }
 
-// DefaultPriceTable is a starting point ONLY. Before any published result,
-// regenerate it from the live AWS Price List API for the target region and
-// record the retrieval date — prices move, and a reviewer will ask.
+// DefaultPriceTable holds On-Demand, Linux, us-east-1 hourly prices retrieved
+// from the public AWS Price List Bulk API (no credentials required) on
+// 2026-09-14. Source, region and retrieval date are recorded verbatim in
+// docs/pricing/aws-on-demand-us-east-1-2026-09-14.json — regenerate both with
+// `python bench/fetch_aws_prices.py` before any published result, since prices
+// move and a reviewer will ask "de onde vem alpha?".
 //
-// Boot latencies below are placeholders pending the measurement campaign.
-// The GPU entries deliberately carry large BootSeconds: pulling a multi-GB
-// model image is exactly the "cold start" regime the thesis targets.
+// NOT covered: spot. The Price List API does not publish spot prices (that
+// needs DescribeSpotPriceHistory against a real, credentialed account); the
+// x0.35 spot discount applied in priceFor() is a documented approximation,
+// not a measurement.
+//
+// Boot latencies below are placeholders pending the measurement campaign
+// (docs/measuring-delta.md). The GPU entries deliberately carry large
+// BootSeconds: pulling a multi-GB model image is exactly the "cold start"
+// regime the thesis targets.
 func DefaultPriceTable() map[string]InstancePrice {
 	return map[string]InstancePrice{
 		// general purpose
@@ -91,9 +100,9 @@ func DefaultPriceTable() map[string]InstancePrice {
 		"m5.xlarge":   {HourlyUSD: 0.192, BootSeconds: 150},
 		"m5.2xlarge":  {HourlyUSD: 0.384, BootSeconds: 155},
 		"m5.4xlarge":  {HourlyUSD: 0.768, BootSeconds: 160},
-		"m6i.large":   {HourlyUSD: 0.095, BootSeconds: 145},
-		"m6i.xlarge":  {HourlyUSD: 0.190, BootSeconds: 145},
-		"m6i.2xlarge": {HourlyUSD: 0.380, BootSeconds: 150},
+		"m6i.large":   {HourlyUSD: 0.096, BootSeconds: 145},
+		"m6i.xlarge":  {HourlyUSD: 0.192, BootSeconds: 145},
+		"m6i.2xlarge": {HourlyUSD: 0.384, BootSeconds: 150},
 
 		// compute optimized (cheaper per core -> the price-aware win case)
 		"c5.large":    {HourlyUSD: 0.085, BootSeconds: 145},
@@ -110,6 +119,6 @@ func DefaultPriceTable() map[string]InstancePrice {
 		"g4dn.xlarge":  {HourlyUSD: 0.526, BootSeconds: 600},
 		"g5.xlarge":    {HourlyUSD: 1.006, BootSeconds: 720},
 		"p3.2xlarge":   {HourlyUSD: 3.060, BootSeconds: 900},
-		"p4d.24xlarge": {HourlyUSD: 32.77, BootSeconds: 1200},
+		"p4d.24xlarge": {HourlyUSD: 21.957642, BootSeconds: 1200}, // era 32.77 (chutado); real e ~33% menor
 	}
 }

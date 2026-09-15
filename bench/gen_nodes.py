@@ -65,13 +65,20 @@ NODE_TEMPLATE = {
 }
 
 # (instance_type, cpu, mem_gi, hourly_usd, boot_seconds)
+#
+# hourly_usd: STABLE_CLASSES sao preco On-Demand real (us-east-1, ver
+# docs/pricing/aws-on-demand-us-east-1-2026-09-14.json, obtido via
+# bench/fetch_aws_prices.py, sem credenciais). TRAP_CLASSES sao esse mesmo
+# preco On-Demand x 0.35 (o desconto de spot documentado em
+# pkg/costaware/pricing.go) -- a AWS nao publica spot no Price List API, entao
+# isto e uma aproximacao, nao uma medicao.
 TRAP_CLASSES = [
-    ("g4dn.xlarge", 4, 16, 0.184, 600),      # spot-priced GPU, huge image pull
-    ("c5.2xlarge", 8, 16, 0.119, 480),       # spot CPU, cold
+    ("g4dn.xlarge", 4, 16, 0.184, 600),      # 0.526 on-demand x 0.35 spot, imagem gigante
+    ("c5.2xlarge", 8, 16, 0.119, 480),       # 0.340 on-demand x 0.35 spot
 ]
 STABLE_CLASSES = [
-    ("m5.2xlarge", 8, 32, 0.384, 150),
-    ("r5.xlarge", 4, 32, 0.252, 150),
+    ("m5.2xlarge", 8, 32, 0.384, 150),       # on-demand
+    ("r5.xlarge", 4, 32, 0.252, 150),        # on-demand
 ]
 
 

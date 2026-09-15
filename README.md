@@ -244,8 +244,14 @@ de ser um numero inventado.
 
 1. *Por que nao Karpenter?* — Resposta: Karpenter e o braco 4 e a comparacao esta
    na Secao X. O diferencial e o horizonte temporal e a decisao conjunta.
-2. *De onde vem `alpha`?* — Price List API, regiao e data registradas.
-3. *De onde vem `delta`?* — Medido, Semana 3. Nao assumido.
+2. *De onde vem `alpha`?* — AWS Price List Bulk API, publica, sem credenciais;
+   regiao e data registradas em `docs/pricing.md` e no snapshot versionado em
+   `docs/pricing/`. Spot **nao** vem da API (a AWS nao publica) — e uma
+   aproximacao documentada (x0.35), dito explicitamente.
+3. *De onde vem `delta`?* — Ainda nao medido: exige cluster real (EKS/GKE)
+   rodando por um tempo, e isso tem custo. Sem orcamento de nuvem no momento;
+   o metodo esta pronto em `docs/measuring-delta.md` para quando houver
+   credito (academico ou nao). Reporte isso como pendencia, nao esconda.
 4. *E se `Phi` empatar com `MostAllocated`?* — E um resultado valido e previsto:
    significa que a heterogeneidade de preco na instancia nao ativa a Condicao 2 do
    Teorema 2. Reporte, nao esconda.
