@@ -1,0 +1,45 @@
+# BENCH ARM C -- PROPOSTA: Phi_i = alpha_i + I(frio)*delta_i + termo de packing.
+#
+# coldNodeAgeSeconds: 0 -- os nos KWOK sao criados no inicio do experimento;
+# com a janela de boot padrao (300s) TODOS seriam "frios" pela idade durante o
+# horizonte inteiro e delta seria cobrado em todo lugar. Com 0, "frio" = vazio
+# (colocar o primeiro pod impede o scale-down), que e a semantica de regime
+# permanente.
+#
+# transitionRatio (R): 0 puro preco / 1 neutro / 10 moderado / 100 critico.
+#
+# Scheduler separado, subido por bench/run_local.py. clientConnection.kubeconfig
+# e injetado em tempo de execucao.
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: false
+profiles:
+  - schedulerName: bench-c
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: MostAllocated
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1
+      - name: CostAware
+        args:
+          transitionRatio: 10.0
+          packingWeight: 0.2
+          coldNodeAgeSeconds: 0
+          defaultPrice:
+            hourlyUSD: 0.10
+            bootSeconds: 180
+    plugins:
+      score:
+        enabled:
+          - name: CostAware
+            weight: 10
+          - name: NodeResourcesFit
+            weight: 3
+        disabled:
+          - name: NodeResourcesBalancedAllocation

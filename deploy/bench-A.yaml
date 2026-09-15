@@ -1,0 +1,13 @@
+# BENCH ARM A -- baseline FRACO: kube-scheduler upstream sem nenhuma alteracao
+# de scoring (NodeResourcesFit = LeastAllocated -> ESPALHA a carga).
+#
+# Diferente de deploy/arm-A-default.yaml, este roda como um scheduler SEPARADO
+# (schedulerName dedicado, leaderElect off) que o bench/run_local.py sobe como
+# subprocesso -- nao precisa substituir o scheduler do cluster. O caminho do
+# kubeconfig e injetado em tempo de execucao em clientConnection.kubeconfig.
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: false
+profiles:
+  - schedulerName: bench-a

@@ -1,0 +1,135 @@
+# Cenario determinista de 4 nos. Nomes e precos FIXOS: as assercoes do
+# bench/scenario.py dependem deles literalmente.
+#
+#   trap-cold    4 cores, $0.184/h, boot 600s, vazio    -> alpha baixo, delta alto
+#   stable-warm  8 cores, $0.384/h, boot 150s, ocupado  -> alpha alto,  delta zero
+#   stable-cold  8 cores, $0.384/h, boot 150s, vazio    -> distrator
+#   trap-warm    4 cores, $0.184/h, boot 600s, ocupado  -> distrator
+#
+# alpha_trap   = 0.184/4000 = 4.60e-5 USD por milli-core-hora
+# alpha_stable = 0.384/8000 = 4.80e-5 USD por milli-core-hora
+# => o trap e genuinamente mais barato por core. Sem isso o teste do flip
+#    passaria pelo motivo errado.
+apiVersion: v1
+kind: Node
+metadata:
+  name: trap-cold
+  labels:
+    type: kwok
+    kubernetes.io/os: linux
+    kubernetes.io/hostname: trap-cold
+    node.kubernetes.io/instance-type: g4dn.xlarge
+    costaware.unirio.br/class: trap
+    scenario: "true"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    node.alpha.kubernetes.io/ttl: "0"
+    costaware.unirio.br/hourly-usd: "0.184"
+    costaware.unirio.br/boot-seconds: "600"
+spec:
+  taints:
+    - key: kwok.x-k8s.io/node
+      value: fake
+      effect: NoSchedule
+status:
+  allocatable: {cpu: "4", memory: 16Gi, pods: "110"}
+  capacity: {cpu: "4", memory: 16Gi, pods: "110"}
+  phase: Running
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: KubeletReady
+  nodeInfo: {kubeletVersion: kwok, operatingSystem: linux, architecture: amd64, containerRuntimeVersion: kwok}
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: stable-warm
+  labels:
+    type: kwok
+    kubernetes.io/os: linux
+    kubernetes.io/hostname: stable-warm
+    node.kubernetes.io/instance-type: m5.2xlarge
+    costaware.unirio.br/class: stable
+    scenario: "true"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    node.alpha.kubernetes.io/ttl: "0"
+    costaware.unirio.br/hourly-usd: "0.384"
+    costaware.unirio.br/boot-seconds: "150"
+spec:
+  taints:
+    - key: kwok.x-k8s.io/node
+      value: fake
+      effect: NoSchedule
+status:
+  allocatable: {cpu: "8", memory: 32Gi, pods: "110"}
+  capacity: {cpu: "8", memory: 32Gi, pods: "110"}
+  phase: Running
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: KubeletReady
+  nodeInfo: {kubeletVersion: kwok, operatingSystem: linux, architecture: amd64, containerRuntimeVersion: kwok}
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: stable-cold
+  labels:
+    type: kwok
+    kubernetes.io/os: linux
+    kubernetes.io/hostname: stable-cold
+    node.kubernetes.io/instance-type: m5.2xlarge
+    costaware.unirio.br/class: stable
+    scenario: "true"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    node.alpha.kubernetes.io/ttl: "0"
+    costaware.unirio.br/hourly-usd: "0.384"
+    costaware.unirio.br/boot-seconds: "150"
+spec:
+  taints:
+    - key: kwok.x-k8s.io/node
+      value: fake
+      effect: NoSchedule
+status:
+  allocatable: {cpu: "8", memory: 32Gi, pods: "110"}
+  capacity: {cpu: "8", memory: 32Gi, pods: "110"}
+  phase: Running
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: KubeletReady
+  nodeInfo: {kubeletVersion: kwok, operatingSystem: linux, architecture: amd64, containerRuntimeVersion: kwok}
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: trap-warm
+  labels:
+    type: kwok
+    kubernetes.io/os: linux
+    kubernetes.io/hostname: trap-warm
+    node.kubernetes.io/instance-type: g4dn.xlarge
+    costaware.unirio.br/class: trap
+    scenario: "true"
+  annotations:
+    kwok.x-k8s.io/node: fake
+    node.alpha.kubernetes.io/ttl: "0"
+    costaware.unirio.br/hourly-usd: "0.184"
+    costaware.unirio.br/boot-seconds: "600"
+spec:
+  taints:
+    - key: kwok.x-k8s.io/node
+      value: fake
+      effect: NoSchedule
+status:
+  allocatable: {cpu: "4", memory: 16Gi, pods: "110"}
+  capacity: {cpu: "4", memory: 16Gi, pods: "110"}
+  phase: Running
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: KubeletReady
+  nodeInfo: {kubeletVersion: kwok, operatingSystem: linux, architecture: amd64, containerRuntimeVersion: kwok}

@@ -1,0 +1,10 @@
+# ARM A -- BASELINE FRACO: kube-scheduler upstream, configuracao padrao.
+# NodeResourcesFit usa LeastAllocated -> ESPALHA a carga.
+# Presente apenas para reproduzir a comparacao dos trabalhos anteriores.
+# NAO use este como baseline principal na tese.
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+clientConnection:
+  kubeconfig: /etc/kubernetes/scheduler.conf
+profiles:
+  - schedulerName: default-scheduler

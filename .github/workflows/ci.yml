@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  K8S_VERSION: "1.31.4"
+  KWOK_VERSION: "v0.6.0"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Camada 1: unitarios. Segundos, sem cluster. Se isto falhar, nada mais importa.
+  # ---------------------------------------------------------------------------
+  unit:
+    name: Testes unitarios (Phi)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      # O primeiro `go mod tidy` contra k8s.io/kubernetes baixa alguns GB.
+      # O cache abaixo e o que separa um CI de 2 minutos de um de 15.
+      - name: Cache do modulo Go
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: gomod-${{ runner.os }}-${{ env.K8S_VERSION }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            gomod-${{ runner.os }}-${{ env.K8S_VERSION }}-
+
+      - name: Resolver go.mod
+        run: |
+          chmod +x hack/gomod.sh
+          ./hack/gomod.sh "${K8S_VERSION}"
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Testes
+        run: go test ./pkg/costaware/... -v -race -coverprofile=coverage.out
+
+      - name: Cobertura
+        run: go tool cover -func=coverage.out | tail -1
+
+      - name: Compilar o scheduler
+        run: go build -o bin/costaware-scheduler ./cmd/scheduler
+
+      - name: Guardar o binario para o job de cenario
+        uses: actions/upload-artifact@v4
+        with:
+          name: costaware-scheduler
+          path: bin/costaware-scheduler
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Camada 2: cenario deterministico em kind + KWOK.
+  # So roda se os unitarios passarem -- nao adianta testar integracao de
+  # uma funcao que ja esta errada isoladamente.
+  # ---------------------------------------------------------------------------
+  scenario:
+    name: Cenario deterministico (kind + KWOK)
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: costaware-scheduler
+          path: bin
+
+      - name: Tornar o binario executavel
+        run: chmod +x bin/costaware-scheduler
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Dependencias Python
+        run: pip install -r requirements.txt
+
+      - name: Criar cluster kind
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: costaware
+          wait: 120s
+
+      - name: Instalar KWOK
+        run: |
+          kubectl apply -f "https://github.com/kubernetes-sigs/kwok/releases/download/${KWOK_VERSION}/kwok.yaml"
+          kubectl apply -f "https://github.com/kubernetes-sigs/kwok/releases/download/${KWOK_VERSION}/stage-fast.yaml"
+          kubectl -n kube-system wait --for=condition=Available --timeout=180s deployment/kwok-controller
+
+      - name: Aplicar os nos do cenario
+        run: |
+          kubectl apply -f deploy/scenario-nodes.yaml
+          kubectl get nodes -l scenario=true -o wide
+
+      - name: Rodar o cenario
+        run: |
+          python bench/scenario.py \
+            --kubeconfig "$HOME/.kube/config" \
+            --scheduler-bin ./bin/costaware-scheduler
+
+      # Diagnostico so quando quebra: sem isto, uma falha no CI vira adivinhacao.
+      - name: Diagnostico (apenas em falha)
+        if: failure()
+        run: |
+          echo "=== nos ==="
+          kubectl get nodes -o wide
+          echo "=== pods do cenario ==="
+          kubectl get pods -n costaware-scenario -o wide || true
+          echo "=== eventos ==="
+          kubectl get events -n costaware-scenario --sort-by=.lastTimestamp || true
+          echo "=== describe dos pods pendentes ==="
+          kubectl describe pods -n costaware-scenario || true
+
+  # ---------------------------------------------------------------------------
+  # Higiene dos scripts Python do benchmark. Nao roda nada contra cluster,
+  # so garante que nao ha erro de sintaxe antes de voce gastar 1h de execucao.
+  # ---------------------------------------------------------------------------
+  lint-bench:
+    name: Lint dos scripts de benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check bench/ --select E9,F63,F7,F82
+      - name: Compilar todos os scripts
+        run: python -m compileall -q bench/

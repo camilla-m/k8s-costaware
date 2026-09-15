@@ -1,0 +1,9 @@
+bin/
+results/
+*.csv
+coverage.out
+__pycache__/
+*.pyc
+.venv/
+/tmp/
+.DS_Store

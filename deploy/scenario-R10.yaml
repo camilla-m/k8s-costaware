@@ -1,0 +1,36 @@
+# CENARIO -- R=10, Phi isolado: a penalidade de cold start deve dominar
+#
+# schedulerName dedicado: o kube-scheduler do cluster ignora estes pods,
+# entao o cenario roda em paralelo sem parar nada.
+#
+# coldNodeAgeSeconds: 0 e OBRIGATORIO aqui. Nos KWOK acabam de ser criados;
+# com a janela de boot padrao (300s) TODOS seriam considerados frios e o
+# cenario nao discriminaria nada.
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: false
+profiles:
+  - schedulerName: costaware-scenario
+    pluginConfig:
+      - name: CostAware
+        args:
+          transitionRatio: 10.0
+          packingWeight: 0.0
+          coldNodeAgeSeconds: 0
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: MostAllocated
+            resources:
+              - name: cpu
+                weight: 1
+    plugins:
+      score:
+        enabled:
+          - name: CostAware
+            weight: 10
+          - name: NodeResourcesFit
+            weight: 0
+        disabled:
+          - name: "*"
