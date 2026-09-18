@@ -1,0 +1,39 @@
+# Valores do Helm para o chart kwok/charts do Karpenter core (sigs.k8s.io/karpenter).
+# Aplicado por hack/setup-karpenter-kwok.sh. controller.image.* e sobrescrito
+# em runtime (a tag/digest vem do `ko build`, nao e fixo aqui).
+logLevel: debug
+
+controller:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  # INSTANCE_TYPES_FILE_PATH: monta deploy/karpenter/instance-types.json (via
+  # ConfigMap, criado pelo hack/setup-karpenter-kwok.sh) para o Karpenter
+  # escolher entre os MESMOS 4 tipos de no e precos reais que bench/gen_nodes.py.
+  env:
+    - name: INSTANCE_TYPES_FILE_PATH
+      value: /etc/karpenter-kwok/instance-types.json
+  extraVolumeMounts:
+    - name: instance-types
+      mountPath: /etc/karpenter-kwok
+      readOnly: true
+
+extraVolumes:
+  - name: instance-types
+    configMap:
+      name: karpenter-instance-types
+
+serviceMonitor:
+  enabled: false
+
+# Feature gates obrigatorios no chart (sem eles o controller faz panic no
+# parse do bool vazio) -- valores conservadores, sem afetar o experimento.
+settings:
+  featureGates:
+    nodeRepair: true
+    capacityBuffer: true
+    staticCapacity: true

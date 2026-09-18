@@ -1,0 +1,52 @@
+# NodePool + KWOKNodeClass para o braco D (Karpenter de verdade, nucleo
+# sigs.k8s.io/karpenter, cloud provider kwok -- sem AWS, sem credenciais).
+#
+# template.metadata.labels: type=kwok e propagado para os Nodes que o
+# Karpenter cria, para que bench/workload.py (nodeSelector: {type: kwok})
+# funcione sem alteracao nas quatro arms.
+#
+# requirements: amd64/linux (os 4 instance types de instance-types.json sao
+# amd64) e os DOIS capacity types -- nao restringimos o Karpenter a spot ou
+# on-demand, ele escolhe pelo proprio algoritmo de consolidacao/preco.
+#
+# disruption.consolidateAfter: 30s. Nao foi afinado para favorecer nenhum
+# lado -- e o mesmo valor validado manualmente antes de rodar o benchmark.
+# Um valor mais alto (comum em producao) deixaria o Karpenter mais lento pra
+# desprovisionar, o que e exatamente o argumento de "componentes
+# desacoplados e reativos" da tese -- reporte o efeito, nao esconda.
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    metadata:
+      labels:
+        type: kwok
+    spec:
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand", "spot"]
+      nodeClassRef:
+        name: default
+        kind: KWOKNodeClass
+        group: karpenter.kwok.sh
+      expireAfter: 720h
+  limits:
+    cpu: 2000
+    memory: 4000Gi
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s
+---
+apiVersion: karpenter.kwok.sh/v1alpha1
+kind: KWOKNodeClass
+metadata:
+  name: default

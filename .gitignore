@@ -7,3 +7,4 @@ __pycache__/
 .venv/
 /tmp/
 .DS_Store
+.karpenter-src/

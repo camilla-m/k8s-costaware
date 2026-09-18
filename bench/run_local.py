@@ -81,15 +81,18 @@ def build_variants(arm_labels, r_values):
 # ---------------------------------------------------------------------------
 # infra
 # ---------------------------------------------------------------------------
-def kubectl(*args, check=True, quiet=False):
+def kubectl(*args, check=True, quiet=False, context=None):
     out = subprocess.DEVNULL if quiet else None
-    return subprocess.run(["kubectl", *args], check=check, stdout=out, stderr=out)
+    cmd = ["kubectl"] + (["--context", context] if context else []) + list(args)
+    return subprocess.run(cmd, check=check, stdout=out, stderr=out)
 
 
-def render_config(src_rel, kubeconfig, scheduler_name=None, transition_ratio=None):
+def render_config(src_rel, kubeconfig, scheduler_name=None, transition_ratio=None,
+                   packing_weight=None):
     """Injeta clientConnection.kubeconfig, sobrescreve profiles[*].schedulerName
     (o rotulo da variante pode divergir do que esta gravado em deploy/bench-*.yaml
-    -- e o caso de C-R<r>) e, se dado, o transitionRatio do plugin CostAware."""
+    -- e o caso de C-R<r>) e, se dado, transitionRatio/packingWeight do plugin
+    CostAware. Config sem CostAware (arms A/B) ignora os dois silenciosamente."""
     with open(os.path.join(ROOT, src_rel)) as fh:
         doc = yaml.safe_load(fh)
     doc.setdefault("clientConnection", {})["kubeconfig"] = os.path.abspath(
@@ -98,10 +101,14 @@ def render_config(src_rel, kubeconfig, scheduler_name=None, transition_ratio=Non
     for profile in doc.get("profiles", []):
         if scheduler_name is not None:
             profile["schedulerName"] = scheduler_name
-        if transition_ratio is not None:
-            for pc in profile.get("pluginConfig", []):
-                if pc.get("name") == "CostAware":
-                    pc.setdefault("args", {})["transitionRatio"] = float(transition_ratio)
+        for pc in profile.get("pluginConfig", []):
+            if pc.get("name") != "CostAware":
+                continue
+            args = pc.setdefault("args", {})
+            if transition_ratio is not None:
+                args["transitionRatio"] = float(transition_ratio)
+            if packing_weight is not None:
+                args["packingWeight"] = float(packing_weight)
     tmp = tempfile.NamedTemporaryFile(
         mode="w", suffix=".yaml", prefix="bench-cfg-", delete=False
     )
@@ -112,20 +119,21 @@ def render_config(src_rel, kubeconfig, scheduler_name=None, transition_ratio=Non
 
 class Scheduler:
     def __init__(self, binary, cfg_rel, kubeconfig, logpath, scheduler_name=None,
-                 transition_ratio=None):
+                 transition_ratio=None, packing_weight=None):
         self.binary = binary
         self.cfg_rel = cfg_rel
         self.kubeconfig = kubeconfig
         self.logpath = logpath
         self.scheduler_name = scheduler_name
         self.transition_ratio = transition_ratio
+        self.packing_weight = packing_weight
         self.proc = None
         self._cfg = None
         self._log = None
 
     def __enter__(self):
-        self._cfg = render_config(self.cfg_rel, self.kubeconfig,
-                                   self.scheduler_name, self.transition_ratio)
+        self._cfg = render_config(self.cfg_rel, self.kubeconfig, self.scheduler_name,
+                                   self.transition_ratio, self.packing_weight)
         self._log = open(self.logpath, "w")
         self.proc = subprocess.Popen(
             [self.binary, "--config", self._cfg, "--secure-port=0", "--v=2"],
@@ -163,17 +171,15 @@ class Scheduler:
             os.unlink(self._cfg)
 
 
-def drain(namespaces, timeout=90):
+def drain(namespaces, timeout=90, context=None):
     kubectl(
         "delete", "ns", *namespaces, "--ignore-not-found", "--wait=true",
-        check=False, quiet=True,
+        check=False, quiet=True, context=context,
     )
+    cmd = ["kubectl"] + (["--context", context] if context else []) + ["get", "pods", "-A", "--no-headers"]
     deadline = time.time() + timeout
     while time.time() < deadline:
-        r = subprocess.run(
-            ["kubectl", "get", "pods", "-A", "--no-headers"],
-            capture_output=True, text=True, check=False,
-        )
+        r = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if "bench-" not in r.stdout:
             return
         time.sleep(2)
@@ -213,7 +219,7 @@ def run_one(variant, seed, args, env, raw_dir, log_dir):
 
     sched_log = os.path.join(log_dir, f"sched-{label}-s{seed}.log")
     with Scheduler(args.scheduler_bin, cfg_rel, args.kubeconfig, sched_log,
-                    sched_name, r_override):
+                    sched_name, r_override, args.packing_weight):
         cost = subprocess.Popen(
             [py, "bench/cost.py", "--arm", label, "--duration", str(duration),
              "--interval", str(args.slot_seconds), "--out", run_csv],
@@ -305,6 +311,9 @@ def main():
     ap.add_argument("--arms", default="A,B,C", help="subconjunto de A,B,C")
     ap.add_argument("--r-values", default=None,
                     help="se dado, expande C em C-R<r> para cada valor (ex.: 0,1,10,100)")
+    ap.add_argument("--packing-weight", type=float, default=None,
+                    help="sobrescreve packingWeight do CostAware em todas as variantes C "
+                         "(default: usa o que estiver em deploy/bench-C.yaml, 0.2)")
     ap.add_argument("--repeats", type=int, default=10)
     ap.add_argument("--seed-base", type=int, default=1)
     ap.add_argument("--scheduler-bin", default="./bin/costaware-scheduler")

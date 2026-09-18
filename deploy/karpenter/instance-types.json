@@ -1,0 +1,206 @@
+[
+  {
+    "name": "g4dn.xlarge",
+    "offerings": [
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "on-demand"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.526
+      },
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "spot"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.1841
+      }
+    ],
+    "architecture": "amd64",
+    "operatingSystems": [
+      "linux"
+    ],
+    "resources": {
+      "cpu": "4",
+      "memory": "16Gi"
+    }
+  },
+  {
+    "name": "c5.2xlarge",
+    "offerings": [
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "on-demand"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.34
+      },
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "spot"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.119
+      }
+    ],
+    "architecture": "amd64",
+    "operatingSystems": [
+      "linux"
+    ],
+    "resources": {
+      "cpu": "8",
+      "memory": "16Gi"
+    }
+  },
+  {
+    "name": "m5.2xlarge",
+    "offerings": [
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "on-demand"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.384
+      },
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "spot"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.1344
+      }
+    ],
+    "architecture": "amd64",
+    "operatingSystems": [
+      "linux"
+    ],
+    "resources": {
+      "cpu": "8",
+      "memory": "32Gi"
+    }
+  },
+  {
+    "name": "r5.xlarge",
+    "offerings": [
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "on-demand"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.252
+      },
+      {
+        "Requirements": [
+          {
+            "key": "karpenter.sh/capacity-type",
+            "operator": "In",
+            "values": [
+              "spot"
+            ]
+          },
+          {
+            "key": "topology.kubernetes.io/zone",
+            "operator": "In",
+            "values": [
+              "test-zone-a"
+            ]
+          }
+        ],
+        "Price": 0.0882
+      }
+    ],
+    "architecture": "amd64",
+    "operatingSystems": [
+      "linux"
+    ],
+    "resources": {
+      "cpu": "4",
+      "memory": "32Gi"
+    }
+  }
+]

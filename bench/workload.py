@@ -105,12 +105,13 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default="arrivals.csv")
     ap.add_argument("--cleanup", action="store_true", help="apaga todos os pods ao fim")
+    ap.add_argument("--context", default=None, help="contexto kubectl (default: o atual)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
     trace = load_trace(args.trace_file) if args.pattern == "trace" else {}
 
-    config.load_kube_config()
+    config.load_kube_config(context=args.context)
     v1 = client.CoreV1Api()
 
     # namespace dedicado, para que a limpeza seja trivial e o cost.py possa

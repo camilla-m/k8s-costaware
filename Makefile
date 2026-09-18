@@ -25,6 +25,9 @@ help:
 	@echo "  make bench-nodes  aplica 200 nos falsos para o benchmark"
 	@echo "  make bench-local  roda os 3 bracos x REPEATS seeds e agrega (KWOK, local)"
 	@echo "  make bench-sweep  varredura de R (0,1,10,100) x REPEATS seeds, C vs B (KWOK, local)"
+	@echo "  make karpenter-setup     sobe Karpenter real (kwok cloud provider) num cluster separado"
+	@echo "  make bench-karpenter     braco D x REPEATS seeds contra o Karpenter"
+	@echo "  make karpenter-teardown  destroi o cluster do Karpenter"
 	@echo "  make clean      destroi o cluster"
 
 .PHONY: deps
@@ -87,6 +90,22 @@ R_VALUES ?= 0,1,10,100
 bench-sweep: build
 	$(PYTHON) bench/run_local.py --repeats $(REPEATS) --arms A,B,C --r-values $(R_VALUES) \
 		--scheduler-bin ./bin/costaware-scheduler --kubeconfig $(KUBECONFIG)
+
+
+# Braco D: Karpenter DE VERDADE (nucleo sigs.k8s.io/karpenter, cloud provider
+# kwok -- sem AWS, sem credenciais). Cluster SEPARADO do $(CLUSTER) acima,
+# porque o Karpenter provisiona nos do zero em vez de usar um pool fixo.
+.PHONY: karpenter-setup
+karpenter-setup:
+	./hack/setup-karpenter-kwok.sh
+
+.PHONY: bench-karpenter
+bench-karpenter:
+	$(PYTHON) bench/run_karpenter_arm.py --repeats $(REPEATS)
+
+.PHONY: karpenter-teardown
+karpenter-teardown:
+	./hack/setup-karpenter-kwok.sh --teardown
 
 .PHONY: clean
 clean:

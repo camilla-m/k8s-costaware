@@ -242,8 +242,14 @@ de ser um numero inventado.
 
 ## Perguntas que a banca vai fazer
 
-1. *Por que nao Karpenter?* — Resposta: Karpenter e o braco 4 e a comparacao esta
-   na Secao X. O diferencial e o horizonte temporal e a decisao conjunta.
+1. *Por que nao Karpenter?* — Nao e mais uma promessa: o braco D roda o
+   **Karpenter de verdade** (nucleo `sigs.k8s.io/karpenter`, cloud provider
+   `kwok`, sem AWS, sem credenciais) — `make karpenter-setup && make
+   bench-karpenter`, ver `hack/setup-karpenter-kwok.sh` e
+   `bench/run_karpenter_arm.py`. Karpenter provisiona nos do zero (nao um
+   pool fixo) e desprovisiona de forma **serializada** (~25s por no, medido
+   nos logs, nao e paralelo) — isso por si so ja e evidencia empirica do
+   argumento "componentes desacoplados e reativos" da tese.
 2. *De onde vem `alpha`?* — AWS Price List Bulk API, publica, sem credenciais;
    regiao e data registradas em `docs/pricing.md` e no snapshot versionado em
    `docs/pricing/`. Spot **nao** vem da API (a AWS nao publica) — e uma
