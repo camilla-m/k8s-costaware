@@ -246,10 +246,18 @@ de ser um numero inventado.
    **Karpenter de verdade** (nucleo `sigs.k8s.io/karpenter`, cloud provider
    `kwok`, sem AWS, sem credenciais) — `make karpenter-setup && make
    bench-karpenter`, ver `hack/setup-karpenter-kwok.sh` e
-   `bench/run_karpenter_arm.py`. Karpenter provisiona nos do zero (nao um
-   pool fixo) e desprovisiona de forma **serializada** (~25s por no, medido
-   nos logs, nao e paralelo) — isso por si so ja e evidencia empirica do
-   argumento "componentes desacoplados e reativos" da tese.
+   `bench/run_karpenter_arm.py`. Resultado em `docs/karpenter-comparison.md`:
+   D bate B (baseline forte, bin-packing cego a preco) em 69,3%, robusto
+   (Wilcoxon exato p=0,0078, 8/8 seeds). **D vs C (o proprio Φ) e
+   inconclusivo** com os dados que existem hoje — uma rodada sugere Φ
+   perdendo por ~31%, mas os numeros batem com contencao de CPU (dois
+   clusters kind disputando a mesma maquina), nao necessariamente um efeito
+   real; a versao "limpa" de C fica quase empatada com D. Reporte isso, nao
+   esconda: precisa de um re-run isolado antes de alegar vitoria ou derrota
+   pra qualquer lado. Karpenter tambem desprovisiona de forma **serializada**
+   (~25s por no, medido nos logs, nao e paralelo, consistente em toda a
+   campanha) — evidencia empirica direta do argumento "componentes
+   desacoplados e reativos" da tese.
 2. *De onde vem `alpha`?* — AWS Price List Bulk API, publica, sem credenciais;
    regiao e data registradas em `docs/pricing.md` e no snapshot versionado em
    `docs/pricing/`. Spot **nao** vem da API (a AWS nao publica) — e uma

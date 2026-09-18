@@ -55,8 +55,12 @@ NAO responde "quanto se economiza na producao". Faltam:
    sem credenciais, `p4d.24xlarge` corrigido de 32.77 para 21.96 USD/h).
 2. **delta medido**, nao `boot_seconds x ratio=10` inventado. Ver
    `docs/measuring-delta.md`. Ainda pendente — exige cluster real.
-3. **Karpenter como 4o braco**, num cluster real (nao KWOK) — consolidacao
-   ligada, mesma carga. Ainda pendente — exige cluster real.
+3. ~~Karpenter como 4o braco.~~ **Feito, sem precisar de cluster real** —
+   `docs/karpenter-comparison.md`. Karpenter DE VERDADE (nucleo
+   `sigs.k8s.io/karpenter`, cloud provider `kwok`, sem AWS). D bate B em
+   69,3% (robusto). D vs C e inconclusivo — um confundidor real (dois
+   clusters kind disputando CPU) contaminou a medicao de C; reportado sem
+   suavizar, com o proximo passo (re-run isolado) ja documentado.
 4. ~~n maior e Wilcoxon exato.~~ **Feito** — `docs/sensitivity-sweep.md`,
    n=8, `scipy.stats.wilcoxon` exato.
 5. ~~Varredura de sensibilidade R.~~ **Feito, e o resultado e desconfortavel**:
